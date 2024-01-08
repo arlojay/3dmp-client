@@ -1,0 +1,54 @@
+#server-list {
+    display: flex;
+    flex-direction: row;
+}
+
+body {
+    background: #000;
+    color: #fff;
+}
+
+.server {
+    display: grid;
+    grid-template-columns: 24em max-content;
+    border: 1px solid #fff;
+    padding: 0.25em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.server:hover {
+    background: #222;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.25em;
+}
+
+#add-server {
+    padding: 1em;
+    border: 1px solid #fff;
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+
+    margin-bottom: 2em;
+}
+
+input, button {
+    background: #000;
+    border: 1px solid #fff;
+    color: inherit;
+    padding: 0.25em 0.5em;
+}
+
+input[type="submit"], input[type="button"], button {
+    cursor: pointer;
+}
