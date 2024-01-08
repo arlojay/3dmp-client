@@ -1,5 +1,5 @@
 import { Euler, Vector3 } from "three";
-import MathEx from "./MathEx.js";
+import MathEx from "./mathEx.js";
 
 class ClientGameObject {
     constructor(data) {

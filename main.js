@@ -1,4 +1,6 @@
 const addServerForm = document.querySelector("#add-server");
+const serverListElement = document.querySelector("#server-list");
+
 let serverList = new Array();
 
 try {
@@ -12,22 +14,27 @@ for(const server of serverList) {
 addServerForm.addEventListener("submit", e => {
     e.preventDefault();
 
-    const data = new FormData(addServerForm);
-    const url = data.get("url");
+    try {
+        const data = new FormData(addServerForm);
+        const url = data.get("url");
 
-    addServer(url);
-    updateServerElement(url);
+        addServer(url);
+        updateServerElement(url);
+    } catch(e) {
+        alert(e.stack ?? e);
+    }
 });
 
+function encodeURL(url) {
+    return btoa(url).replace(/[^a-zA-Z0-9]/g, "");
+}
 
-async function updateServerElement(url) {
-    const serverList = document.querySelector("#server-list");
-
-    const oldElement = document.querySelector("#server-" + btoa(url));
+function updateServerElement(url) {
+    const oldElement = document.querySelector("#server-" + encodeURL(url));
     const newElement = createServerElement(url);
 
     if(oldElement == null) {
-        serverList.append(newElement);
+        serverListElement.append(newElement);
     } else {
         oldElement.replaceWith(newElement);
     }
@@ -35,7 +42,7 @@ async function updateServerElement(url) {
 
 function createServerElement(url) {
     const section = document.createElement("fieldset");
-    section.setAttribute("id", "server-" + btoa(url));
+    section.setAttribute("id", "server-" + encodeURL(url));
 
     const legend = document.createElement("legend");
 
@@ -58,7 +65,7 @@ function createServerElement(url) {
     section.append(legend, listElem);
 
     
-    const loadingMessage = document.createElement("span");
+    const loadingMessage = document.createElement("pre");
     loadingMessage.textContent = "Loading...";
     listElem.append(loadingMessage);
 
@@ -86,6 +93,8 @@ function createServerElement(url) {
                 document.location.assign("./game/?" + search);
             });
         }
+    }).catch(e => {
+        loadingMessage.textContent = " - An error occured -\n" + (e.stack ?? e);
     });
 
     return section;
