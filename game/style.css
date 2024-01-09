@@ -4,3 +4,43 @@ html, body, canvas {
     margin: 0px;
     overflow: hidden;
 }
+
+body {
+    font: 1rem Arial, sans-serif;
+}
+
+#chat {
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+
+    background: #0004;
+    color: white;
+    width: 60vh;
+
+    font-size: 0.75em;
+}
+#chat-history {
+    height: 50vh;
+    width: 100%;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+#chat-history, #chat-input, input {
+    border: 1px solid #444;
+    background: #0004;
+
+    color: inherit;
+    margin: 0px;
+}
+
+#chat-input {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+ul {
+    padding: 0px;
+    list-style: none;
+}

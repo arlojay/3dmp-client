@@ -3,11 +3,11 @@ import Mouse from "./mouse.js";
 import SerialBus from "./serialBus.js";
 
 class Controls extends SerialBus {
-    constructor(element) {
+    constructor(element, mouseElement = element) {
         super();
 
         this.keyboard = new Keyboard(element);
-        this.mouse = new Mouse(element);
+        this.mouse = new Mouse(mouseElement);
 
         this.keyboard.merge(this);
         this.mouse.merge(this);

@@ -1,7 +1,12 @@
 import { Euler, Vector3 } from "three";
 import MathEx from "./mathEx.js";
 
+let pollingRate = 30;
 class ClientGameObject {
+    static setPollingRate(newValue) {
+        pollingRate = newValue;
+    }
+
     constructor(data) {
         this.raw = data;
         this.id = "";
@@ -23,7 +28,7 @@ class ClientGameObject {
     }
 
     update(dt) {
-        const alpha = 1 - (0.5 ** (dt * 60));
+        const alpha = 1 - (0.5 ** (dt * pollingRate));
 
         this.mesh.position.lerp(this.position, alpha);
         this.mesh.rotation.set(

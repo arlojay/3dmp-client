@@ -19,6 +19,14 @@ class Client {
     setPlayerRotation(rotation) {
         this.socket.send("set-player-rotation", [rotation.x, rotation.y, rotation.z, rotation.order]);
     }
+
+    sendKey(key) {
+        this.socket.send("key", key);
+    }
+
+    sendMessage(message) {
+        this.socket.send("message", message);
+    }
 }
 
 export default Client;
