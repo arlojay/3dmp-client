@@ -1,4 +1,4 @@
-import { Euler, ObjectLoader, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
+import { Euler, ObjectLoader, PerspectiveCamera, Scene, Vector3, WebGLRenderer, Color, Box3 } from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import Socket from "./socket.js";
 import Client from "./client.js";
@@ -10,6 +10,7 @@ const renderer = new WebGLRenderer({ canvas: document.querySelector("canvas") })
 const camera = new PerspectiveCamera(90, 1, 0.01, 3000);
 const cameraControls = new PointerLockControls(camera, renderer.domElement);
 const objectLoader = new ObjectLoader();
+const rotation = new Vector3();
 let scene = new Scene();
 
 window.camera = camera;
@@ -20,6 +21,7 @@ window.camera = camera;
 let controls;
 
 let client, chat;
+let worldBounds = new Box3();
 const gameObjects = new Map();
 
 
@@ -31,6 +33,16 @@ function render(time) {
     const dt = Math.min(100, time - lastTime) * 0.001;
     lastTime = time;
 
+    if(client.socket.open) updateGameWorld(dt);
+
+    camera.rotation.x = rotation.x;
+    camera.rotation.y = rotation.y;
+    camera.rotation.z = rotation.z;
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+}
+function updateGameWorld(dt) {
     for(const gameObject of gameObjects.values()) {
         gameObject.update(dt);
     }
@@ -70,13 +82,11 @@ function render(time) {
         }
     }
 
+    worldBounds.clampPoint(camera.position, camera.position);
+
     if(moved) {
         client.setPlayerPosition(camera.position);
     }
-
-    renderer.render(scene, camera);
-
-    requestAnimationFrame(render);
 }
 function resize() {
     renderer.setPixelRatio(devicePixelRatio);
@@ -94,7 +104,8 @@ async function init() {
     });
 
     controls.on("mousemovelocked", delta => {
-        camera.rotation.add(new Euler(delta[1] * 0.003, delta[0] * 0.003, 0));
+        rotation.x -= delta[1] * 0.003;
+        rotation.y -= delta[0] * 0.003;
         
         client.setPlayerRotation(camera.rotation);
     });
@@ -125,10 +136,7 @@ async function init() {
 
     client.socket.on("game-object-change", data => {
         const gameObject = gameObjects.get(data.objectId);
-        if(gameObject == null) {
-            console.warn("Recieved a change packet for an object that doesn't exist yet (" + data.objectId + ")");
-            return;
-        }
+        if(gameObject == null) return console.warn("Recieved a change packet for an object that doesn't exist (" + data.objectId + ")");
 
         for(const change of data.changes) {
             gameObject.handleDataChange(change.id, change.value);
@@ -140,15 +148,20 @@ async function init() {
     });
     client.socket.on("remove-object", async id => {
         const gameObject = gameObjects.get(id);
+        if(gameObject == null) return console.warn("Server issued deletion request for an object that doesn't exist (" + id + ")")
 
         gameObjects.delete(id);
         scene.remove(gameObject.mesh);
     });
     client.socket.on("player-camera-position", data => {
-        camera.position.set(...data);
+        if(data.mask & 0b100) camera.position.x = data.pos[0];
+        if(data.mask & 0b010) camera.position.y = data.pos[1];
+        if(data.mask & 0b001) camera.position.z = data.pos[2];
     });
     client.socket.on("player-camera-rotation", data => {
-        camera.rotation.set(...data);
+        if(data.mask & 0b100) camera.rotation.x = data.rot[0];
+        if(data.mask & 0b010) camera.rotation.y = data.rot[1];
+        if(data.mask & 0b001) camera.rotation.z = data.rot[2];
     });
     client.socket.on("message", message => {
         chat.addMessage(message);
@@ -177,11 +190,21 @@ async function onConnected() {
     scene = new Scene();
 
     ClientGameObject.setPollingRate(data.globals.pollingRate);
+    renderer.setClearColor(new Color(...data.globals.skyColor));
+    worldBounds = new Box3(
+        new Vector3(...data.globals.boundingBox.slice(0, 3)),
+        new Vector3(...data.globals.boundingBox.slice(3, 6))
+    );
 
     for await (const object of data.world) {
         const gameObject = await createGameObject(object);
         scene.add(gameObject.mesh);
     }
+
+    worldBounds.getCenter(camera.position);
+    
+    client.setPlayerPosition(camera.position);
+    client.setPlayerRotation(camera.rotation);
 }
 
 async function createGameObject(data) {

@@ -12,6 +12,9 @@ class ClientGameObject {
         this.id = "";
         this.mesh = null;
 
+        this.moved = false;
+        this.rotated = false;
+
         this.position = new Vector3();
         this.rotation = new Euler();
     }
@@ -19,11 +22,23 @@ class ClientGameObject {
     handleDataChange(id, value) {
         if(id == "position") {
             this.position.set(...value);
+
+            // Snap the object immediately if first movement packet
+            if(!this.moved) {
+                this.mesh.position.set(...value);
+                this.moved = true;
+            }
         }
         if(id == "rotation") {
             this.rotation.set(...value.slice(0, 3));
             this.rotation.order = value[3];
             this.mesh.rotation.order = value[3];
+
+            // Snap the object immediately if first rotation packet
+            if(!this.rotated) {
+                this.mesh.rotation.set(...value);
+                this.rotated = true;
+            }
         }
     }
 

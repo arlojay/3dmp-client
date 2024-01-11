@@ -10,7 +10,10 @@ class Client {
     }
 
     async getLevel() {
-        return await this.socket.execute("get-level");
+        const level = await this.socket.execute("get-level");
+        this.socket.send("ready");
+
+        return level;
     }
 
     setPlayerPosition(position) {
